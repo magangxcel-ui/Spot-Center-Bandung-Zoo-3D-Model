@@ -9,18 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css" />
 
-    <!-- Import Map: resolve bare module specifiers tanpa bundler -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.module.js",
-            "three/examples/jsm/controls/OrbitControls.js": "https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/controls/OrbitControls.js",
-            "web-ifc-three/IFCLoader": "https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.136/IFCLoader.js",
-            "web-ifc-three": "https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.136/IFCLoader.js"
-        }
-    }
-    </script>
-</head>
+  </head>
 <body>
 
     <!-- ============================
@@ -225,7 +214,7 @@
     </div><!-- end ui-layer -->
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="js/map.js"></script>
+    <script type="module" src="js/map.js"></script>
     <script type="module" src="js/viewer.js"></script>
     <script>
         // Landing page fade-out
