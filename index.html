@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bandung Zoo Spatial Explorer | 3D GIS Analytics</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css" />
+
+    <!-- Import Map: resolve bare module specifiers tanpa bundler -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://esm.sh/three@0.152.0",
+            "three/examples/jsm/controls/OrbitControls.js": "https://esm.sh/three@0.152.0/examples/jsm/controls/OrbitControls.js",
+            "web-ifc-three/IFCLoader": "https://esm.sh/web-ifc-three@0.0.136/IFCLoader",
+            "web-ifc-three": "https://esm.sh/web-ifc-three@0.0.136"
+        }
+    }
+    </script>
+</head>
+<body>
+
+    <!-- ============================
+         LANDING PAGE
+    ============================= -->
+    <div id="landing-page">
+        <div class="landing-bg-grid"></div>
+        <div class="landing-content">
+            <div class="landing-badge">BANDUNG ZOO</div>
+            <h1 class="glow-text">SPATIAL EXPLORER</h1>
+            <p>Platform Integrasi Data Spasial & Model 3D untuk Analisis Tata Ruang Kebun Binatang Tingkat Lanjut.</p>
+            <button id="btn-enter">Mulai Eksplorasi →</button>
+        </div>
+    </div>
+
+    <!-- ============================
+         VIEWPORT 3D
+    ============================= -->
+    <div id="viewer-container">
+        <canvas id="viewerCanvas"></canvas>
+
+        <!-- Overlay: Kompas & Legenda -->
+        <div id="viewport-overlays">
+            <div class="compass-wrap">
+                <div class="compass" id="compass-arrow">
+                    <div class="compass-n">N</div>
+                    <div class="compass-needle">⇧</div>
+                </div>
+            </div>
+            <div class="legend-box">
+                <h4>Legenda Spasial</h4>
+                <div class="legend-item">
+                    <span class="color-box" style="background:#e2e8f0;"></span>
+                    Gedung Spot Center
+                </div>
+                <div class="legend-item">
+                    <span class="color-box" style="background:#F29C99;"></span>
+                    Pengkerasan Spot Center
+                </div>
+                <div class="legend-item">
+                    <span class="color-box" style="background:#0000CD;"></span>
+                    Kanopi Gedung Spot Center
+                </div>
+                <div class="legend-item">
+                    <span class="color-box" style="background:#00f0ff;"></span>
+                    Objek Terpilih
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================
+         KOORDINAT REAL-TIME UTM 48S
+         Format: X = ... | Y = ... | Z = ...
+    ============================= -->
+    <div id="live-coordinates">
+        <span class="coord-block">
+            <span class="coord-label">X</span>
+            <span class="coord-eq">=</span>
+            <span id="coord-x" class="coord-val">787500.000</span>
+        </span>
+        <span class="coord-sep">|</span>
+        <span class="coord-block">
+            <span class="coord-label">Y</span>
+            <span class="coord-eq">=</span>
+            <span id="coord-y" class="coord-val">9238500.000</span>
+        </span>
+        <span class="coord-sep">|</span>
+        <span class="coord-block">
+            <span class="coord-label">Z</span>
+            <span class="coord-eq">=</span>
+            <span id="coord-z" class="coord-val">742.000</span>
+        </span>
+        <span class="coord-crs">UTM 48S</span>
+    </div>
+
+    <!-- ============================
+         UI LAYER (PANEL & HEADER)
+    ============================= -->
+    <div id="ui-layer">
+
+        <!-- HEADER -->
+        <header class="top-navbar">
+            <div class="nav-left">
+                <div class="brand-text">
+                    <h1>BANDUNG ZOO <span class="accent-text">SPATIAL</span></h1>
+                    <p>3D GIS Visualization &amp; Analytics</p>
+                </div>
+            </div>
+            <div class="nav-center">
+                <button id="btn-reset-view" class="nav-tool-btn" title="Kembali ke tampilan awal">⟳ Reset View</button>
+            </div>
+            <div class="nav-right">
+                <div class="render-stats">
+                    <span class="pulse-dot"></span>
+                    UTM 48S &nbsp;|&nbsp; EPSG:32748
+                </div>
+                <img src="Assets/Models/logo-spig.png" alt="LOGO SPIG" class="header-logo" onerror="this.style.display='none'">
+                <img src="Assets/Models/logo-xcel.png" alt="LOGO XCEL" class="header-logo" onerror="this.style.display='none'">
+            </div>
+        </header>
+
+        <!-- PANEL KANAN -->
+        <div class="side-panel" id="side-panel">
+
+            <!-- 1. MANAJEMEN LAYER -->
+            <div class="panel-section">
+                <h3><span class="icon"></span> Manajemen Layer</h3>
+                <div class="layer-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="toggle-model" checked>
+                        <span>Data Objek 3D</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel-divider"></div>
+
+            <!-- 2. ALAT PENGUKURAN -->
+            <div class="panel-section">
+                <h3><span class="icon"></span> Alat Pengukuran</h3>
+                <div class="measure-toolbar">
+                    <button id="btn-measure-dist" class="measure-btn" title="Klik 2 titik → jarak lurus">
+                        <span class="mbtn-icon">📏</span>
+                        <span class="mbtn-label">Jarak</span>
+                    </button>
+                    <button id="btn-measure-area" class="measure-btn" title="Klik 3+ titik lalu double-klik → luas area">
+                        <span class="mbtn-icon">⬡</span>
+                        <span class="mbtn-label">Luas</span>
+                    </button>
+                    <button id="btn-measure-vol" class="measure-btn" title="Double-klik objek → volume bounding box">
+                        <span class="mbtn-icon">📦</span>
+                        <span class="mbtn-label">Volume</span>
+                    </button>
+                </div>
+                <div id="measure-hint" class="measure-hint hidden">
+                    Aktifkan salah satu mode di atas.
+                </div>
+                <button id="btn-clear-measure" class="action-btn danger hidden" style="margin-top:10px;width:100%;">
+                    🗑️ Hapus Data Ukur
+                </button>
+            </div>
+
+            <div class="panel-divider"></div>
+
+            <!-- 3. ANALISIS PEMOTONGAN -->
+            <div class="panel-section">
+                <h3><span class="icon"></span> Analisis 3D Model</h3>
+                <div class="slider-group">
+                    <label>Transparansi Objek
+                        <span id="val-opacity" class="slider-val">100%</span>
+                    </label>
+                    <input type="range" id="opacity-slider" min="10" max="100" value="100">
+                </div>
+                <div class="slider-group">
+                    <label>Potongan X
+                        <span id="val-clip-x" class="slider-val">Max</span>
+                    </label>
+                    <input type="range" id="clip-x" min="-100" max="100" value="100">
+                </div>
+                <div class="slider-group">
+                    <label>Potongan Z (Atas/Bawah)
+                        <span id="val-clip-y" class="slider-val">Max</span>
+                    </label>
+                    <input type="range" id="clip-y" min="-50" max="150" value="150">
+                </div>
+                <div class="slider-group">
+                    <label>Potongan Y
+                        <span id="val-clip-z" class="slider-val">Max</span>
+                    </label>
+                    <input type="range" id="clip-z" min="-100" max="100" value="100">
+                </div>
+                <button id="btn-reset-clip" class="action-btn" style="width:100%;margin-top:4px;">
+                    ↺ Reset Pemotongan
+                </button>
+            </div>
+
+            <div class="panel-divider"></div>
+
+            <!-- 4. INFORMASI OBJEK -->
+            <div class="panel-section">
+                <h3><span class="icon"></span> Informasi Objek</h3>
+                <div id="properties-content">
+                    <p class="empty-state">Double-klik objek 3D untuk melihat informasi detail.</p>
+                </div>
+            </div>
+
+        </div><!-- end side-panel -->
+
+        <!-- MINIMAP -->
+        <div id="minimap-wrapper">
+            <div class="minimap-bar"> Peta Satelit Regional</div>
+            <div id="map"></div>
+        </div>
+
+        <!-- LOADING -->
+        <div id="loading-overlay" class="hidden">
+            <div class="loader-ring"></div>
+            <p>Memuat Data Spasial...</p>
+        </div>
+
+    </div><!-- end ui-layer -->
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="js/map.js"></script>
+    <script type="module" src="js/viewer.js"></script>
+    <script>
+        // Landing page fade-out
+        document.getElementById('btn-enter').addEventListener('click', () => {
+            const lp = document.getElementById('landing-page');
+            lp.style.opacity = '0';
+            setTimeout(() => { lp.style.display = 'none'; }, 700);
+        });
+    </script>
+</body>
+</html>
