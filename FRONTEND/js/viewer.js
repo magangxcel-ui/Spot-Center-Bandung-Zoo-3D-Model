@@ -11,6 +11,7 @@
  * ✅ Reset View & Reset Pemotongan
  * ✅ Metadata IFC diterjemahkan ke label Bahasa Indonesia
  * ✅ Volume otomatis ditampilkan saat klik objek
+ * ✅ Fix: IFCLoader loadAsync error handling
  */
 
 import * as THREE from 'three';
@@ -208,39 +209,45 @@ function enhanceMaterials(model) {
 
 /** Load file IFC utama */
 async function loadIFC() {
-    document.getElementById('loading-overlay').classList.remove('hidden');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    loadingOverlay.classList.remove('hidden');
 
-    await ifcLoader.ifcManager.setWasmPath('/');
-    await ifcLoader.ifcManager.applyWebIfcConfig({
-        USE_FAST_BOOLS: true,
-        COORDINATE_TO_ORIGIN: true
-    });
+    try {
+        // 1. Inisialisasi WASM
+        await ifcLoader.ifcManager.setWasmPath('https://unpkg.com/web-ifc@0.0.39/');
+        await ifcLoader.ifcManager.applyWebIfcConfig({
+            USE_FAST_BOOLS: true,
+            COORDINATE_TO_ORIGIN: true
+        });
 
-    ifcLoader.load('./Assets/Models/Spot-Center-Bandung-Zoo.ifc', model => {
+        // 2. Gunakan loadAsync agar mengembalikan Promise yang rapi
+        const model = await ifcLoader.loadAsync('./assets/Models/Spot-Center-Bandung-Zoo.ifc');
+        
         ifcModel   = model;
         ifcModelID = model.modelID;
         enhanceMaterials(model);
         scene.add(model);
 
-        // Hitung bounding box model untuk auto-fit kamera & slider
+        // 3. Hitung bounding box model untuk auto-fit kamera & slider
         const box    = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size   = box.getSize(new THREE.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
 
-        // Sesuaikan range slider clipping dengan ukuran model
+        // 4. Sesuaikan range slider clipping dengan ukuran model
         const cxEl = document.getElementById('clip-x');
         const cyEl = document.getElementById('clip-y');
         const czEl = document.getElementById('clip-z');
         cxEl.max = size.x; cxEl.min = -size.x; cxEl.value = size.x;
-        cyEl.max = size.y; cyEl.min = -10;      cyEl.value = size.y;
-        czEl.max = size.z; czEl.min = -size.z;  czEl.value = size.z;
+        cyEl.max = size.y; cyEl.min = -10;     cyEl.value = size.y;
+        czEl.max = size.z; czEl.min = -size.z; czEl.value = size.z;
+        
         clipPlanes[0].constant = size.x;
         clipPlanes[1].constant = size.y;
         clipPlanes[2].constant = size.z;
         clipDefault = { x: size.x, y: size.y, z: size.z };
 
-        // Auto-fit kamera
+        // 5. Auto-fit kamera
         const fov = camera.fov * (Math.PI / 180);
         const camDist = Math.abs(maxDim / 2 / Math.tan(fov / 2)) * 1.55;
         const camPos  = new THREE.Vector3(
@@ -248,16 +255,21 @@ async function loadIFC() {
             center.y + camDist * 0.6,
             center.z + camDist
         );
+        
         camera.position.copy(camPos);
         controls.target.copy(center);
         controls.update();
 
-        // Simpan posisi awal untuk tombol Reset View
+        // 6. Simpan posisi awal untuk tombol Reset View
         initialCamPos.copy(camPos);
         initialCamTarget.copy(center);
 
-        document.getElementById('loading-overlay').classList.add('hidden');
-    });
+        loadingOverlay.classList.add('hidden');
+
+    } catch (error) {
+        console.error('Gagal memuat model IFC atau dependensi WASM:', error);
+        loadingOverlay.innerHTML = '<span style="color: #ef4444; font-weight: bold; padding: 20px;">Gagal memuat model spasial. Silakan cek console.</span>';
+    }
 }
 loadIFC();
 
