@@ -700,3 +700,36 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     opacity: 0 !important;
     pointer-events: none !important;
 }
+/* =========================================
+   RESPONSIVE — MOBILE (max-width: 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    .side-panel {
+        width: 100% !important;
+        height: 40vh !important;
+        bottom: 0;
+        top: auto !important;
+        right: 0 !important;
+        border-radius: 16px 16px 0 0;
+        overflow-y: auto;
+    }
+
+    #minimap-wrapper {
+        width: 120px !important;
+        height: 120px !important;
+    }
+
+    .top-navbar {
+        padding: 6px 10px !important;
+        flex-wrap: wrap;
+    }
+
+    .top-navbar h1 {
+        font-size: 0.8rem !important;
+    }
+
+    #live-coordinates {
+        font-size: 0.6rem !important;
+        bottom: 42vh !important;
+    }
+}

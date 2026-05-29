@@ -34,18 +34,21 @@ const camera = new THREE.PerspectiveCamera(
     10000
 );
 
+const isMobile = /iPhone|iPad|Android|Mobile/i.test(navigator.userAgent)
+    || window.innerWidth < 768;
+
 const renderer = new THREE.WebGLRenderer({
     canvas,
-    antialias: true,
+    antialias: !isMobile,       // matikan di HP = lebih ringan
     alpha: true,
-    logarithmicDepthBuffer: true
+    logarithmicDepthBuffer: !isMobile
 });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
 renderer.setSize(container.clientWidth, container.clientHeight, false);
-renderer.shadowMap.enabled   = true;
-renderer.shadowMap.type      = THREE.PCFSoftShadowMap;
-renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled    = !isMobile;   // matikan shadow di HP
+renderer.shadowMap.type       = THREE.PCFSoftShadowMap;
+renderer.toneMapping          = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure  = 1.0;
 renderer.localClippingEnabled = true;
 
 const controls = new OrbitControls(camera, renderer.domElement);
@@ -66,7 +69,7 @@ scene.add(new THREE.AmbientLight(0xffffff, 0.65));
 const mainLight = new THREE.DirectionalLight(0xfff5e0, 2.2);
 mainLight.position.set(150, 250, 120);
 mainLight.castShadow = true;
-mainLight.shadow.mapSize.set(4096, 4096);
+mainLight.shadow.mapSize.set(isMobile ? 512 : 4096, isMobile ? 512 : 4096);
 mainLight.shadow.bias       = -0.0004;
 mainLight.shadow.normalBias = 0.02;
 const shadowD = 250;
