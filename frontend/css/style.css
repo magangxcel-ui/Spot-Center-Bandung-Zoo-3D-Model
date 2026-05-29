@@ -5,13 +5,13 @@
     --bg-deep:        #030c07;
     --bg-base:        #071510;
     --panel-dark:     #091e12;
-    --panel-main:     #0f4032;          /* Warna utama yang diminta */
+    --panel-main:     #0f4032;
     --panel-light:    #145740;
     --border-subtle:  rgba(0, 240, 255, 0.12);
     --border-main:    rgba(0, 240, 255, 0.25);
     --accent:         #00f0ff;
     --accent-glow:    rgba(0, 240, 255, 0.3);
-    --accent-warm:    #fbbf24;          /* Untuk data ukur */
+    --accent-warm:    #fbbf24;
     --green-bright:   #22c55e;
     --text-primary:   #e2ede8;
     --text-secondary: #94b8a8;
@@ -21,6 +21,11 @@
     --radius-sm:      6px;
     --radius-md:      10px;
     --radius-lg:      14px;
+
+    /* Mobile layout heights — satu tempat, mudah diubah */
+    --navbar-h:       52px;
+    --coord-h:        32px;
+    --panel-h:        38vh;
 }
 
 /* =========================================
@@ -28,13 +33,16 @@
    ========================================= */
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
+html, body {
     font-family: 'Manrope', system-ui, sans-serif;
     background: radial-gradient(ellipse at 30% 20%, #0d3024 0%, var(--bg-deep) 65%);
     color: var(--text-primary);
     overflow: hidden;
-    height: 100vh;
-    width: 100vw;
+    height: 100%;
+    width: 100%;
+    /* safe area untuk notch & home bar Android/iOS */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
 h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
@@ -253,7 +261,7 @@ h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
     pointer-events: none;
 }
 
-/* KOMPAS — berputar via JS di animate loop */
+/* KOMPAS */
 .compass-wrap {
     display: flex;
     justify-content: center;
@@ -313,8 +321,7 @@ h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
 }
 
 /* =========================================
-   KOORDINAT REAL-TIME UTM 48S
-   Format: X = 787537.120 | Y = 9238425.791 | Z = 742.210
+   KOORDINAT REAL-TIME
    ========================================= */
 #live-coordinates {
     position: absolute;
@@ -381,7 +388,7 @@ h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
     right: 28px;
     width: 310px;
     max-height: calc(100vh - 130px);
-    background: rgba(15, 64, 50, 0.82);   /* #0f4032 dengan opacity */
+    background: rgba(15, 64, 50, 0.82);
     backdrop-filter: blur(22px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
@@ -441,7 +448,7 @@ h1, h2, h3, h4 { font-family: 'Montserrat', sans-serif; }
     flex-shrink: 0;
 }
 
-/* TOOLBAR PENGUKURAN: 3 TOMBOL SEJAJAR */
+/* TOOLBAR PENGUKURAN */
 .measure-toolbar {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -700,108 +707,152 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
     opacity: 0 !important;
     pointer-events: none !important;
 }
+
 /* =========================================
    RESPONSIVE — MOBILE (max-width: 768px)
+   =========================================
+   ARSITEKTUR LAYOUT HP (dari atas ke bawah):
+   ┌─────────────────────────────┐  ← 0
+   │  NAVBAR  (--navbar-h: 52px) │
+   ├─────────────────────────────┤  ← 52px
+   │                             │
+   │   3D VIEWER                 │  ← tinggi = 100vh - navbar - coord - panel
+   │   (tengah, tidak tertutup)  │
+   │                             │
+   ├─────────────────────────────┤
+   │  KOORDINAT (--coord-h: 32px)│
+   ├─────────────────────────────┤
+   │  SIDE PANEL (--panel-h: 38vh│
+   └─────────────────────────────┘
    ========================================= */
 @media (max-width: 768px) {
 
-    /* --- LANDING PAGE --- */
+    /* ── LANDING PAGE ── */
     .landing-content {
-        padding: 36px 24px;
-        margin: 0 16px;
+        padding: 32px 20px;
+        margin: 0 14px;
     }
     .glow-text {
-        font-size: 1.8rem;
-        letter-spacing: 3px;
+        font-size: 1.7rem;
+        letter-spacing: 2px;
     }
     .landing-content p {
-        font-size: 0.85rem;
-        margin-bottom: 28px;
+        font-size: 0.83rem;
+        margin-bottom: 24px;
+    }
+    #btn-enter {
+        padding: 12px 32px;
+        font-size: 0.8rem;
     }
 
-    /* --- NAVBAR: ramping, sembunyikan elemen non-esensial --- */
+    /* ── NAVBAR: ramping ── */
     .top-navbar {
-        height: 52px !important;
+        height: var(--navbar-h) !important;
         padding: 0 12px !important;
         flex-wrap: nowrap;
+        gap: 8px;
     }
     .brand-text h1 {
         font-size: 0.78rem !important;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
     }
     .brand-text p {
-        font-size: 0.55rem !important;
+        font-size: 0.52rem !important;
+        letter-spacing: 1.5px;
     }
+    /* Sembunyikan elemen non-esensial di navbar */
     .render-stats,
     .header-logo {
         display: none !important;
     }
     .nav-tool-btn {
-        padding: 6px 12px !important;
-        font-size: 0.68rem !important;
+        padding: 5px 10px !important;
+        font-size: 0.65rem !important;
     }
 
-    /* --- VIEWPORT: mulai di bawah navbar --- */
+    /* ── VIEWER: mulai tepat di bawah navbar,
+       berakhir tepat di atas koordinat + panel ── */
     #viewer-container {
-        top: 52px;
-        height: calc(60vh - 52px);
+        position: absolute;
+        top: var(--navbar-h) !important;
+        left: 0;
+        right: 0;
+        /* tinggi = viewport - navbar - coord bar - bottom panel */
+        height: calc(100vh - var(--navbar-h) - var(--coord-h) - var(--panel-h)) !important;
+        bottom: auto !important;
     }
 
-    /* --- KOMPAS & LEGENDA: perkecil & posisi ulang --- */
+    /* ── KOMPAS & LEGENDA:
+       tepat di bawah navbar, tidak masuk ke viewer ── */
     #viewport-overlays {
-        top: 60px;
-        left: 10px;
-        gap: 8px;
+        position: absolute;
+        top: calc(var(--navbar-h) + 8px) !important;
+        left: 8px !important;
+        gap: 6px;
+        max-width: 130px; /* cegah melebar */
     }
     .compass {
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
     }
-    .compass-needle { font-size: 0.9rem; }
+    .compass-n { font-size: 0.58rem; }
+    .compass-needle { font-size: 0.85rem; }
+
     .legend-box {
-        padding: 8px 10px;
+        padding: 7px 10px;
+        max-width: 130px;
     }
     .legend-box h4 {
-        font-size: 0.6rem;
-        margin-bottom: 8px;
+        font-size: 0.58rem;
+        margin-bottom: 6px;
+        letter-spacing: 1px;
     }
     .legend-item {
-        font-size: 0.62rem;
+        font-size: 0.6rem;
         gap: 6px;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
     }
     .color-box {
-        width: 10px;
-        height: 10px;
+        width: 9px;
+        height: 9px;
+        flex-shrink: 0;
     }
 
-    /* --- KOORDINAT: di atas panel, di bawah 3D viewer --- */
+    /* ── KOORDINAT:
+       strip penuh lebar layar, tepat di bawah viewer ── */
     #live-coordinates {
-        bottom: 40vh !important;
+        position: fixed !important;
+        bottom: var(--panel-h) !important;  /* duduk tepat di atas panel */
         left: 0 !important;
         right: 0 !important;
         transform: none !important;
         width: 100% !important;
+        height: var(--coord-h) !important;
         justify-content: center;
         border-radius: 0 !important;
         border-left: none !important;
         border-right: none !important;
-        padding: 6px 12px !important;
+        border-top: 1px solid var(--border-subtle) !important;
+        border-bottom: 1px solid var(--border-subtle) !important;
+        padding: 0 10px !important;
+        gap: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        z-index: 9 !important;
+        background: rgba(9, 30, 18, 0.96) !important;
+    }
+    /* Sembunyikan separator & CRS di HP agar muat */
+    .coord-sep { margin: 0 3px; font-size: 0.55rem; }
+    .coord-crs { display: none; }
+    .coord-label { font-size: 0.58rem !important; }
+    .coord-eq    { font-size: 0.55rem !important; }
+    .coord-val   {
         font-size: 0.6rem !important;
-        z-index: 6;
-    }
-    .coord-val {
-        font-size: 0.62rem !important;
-        min-width: 70px !important;
-    }
-    .coord-label, .coord-eq {
-        font-size: 0.62rem !important;
-    }
-    .coord-crs {
-        font-size: 0.58rem !important;
+        min-width: 68px !important;
+        letter-spacing: 0;
     }
 
-    /* --- SIDE PANEL: drawer dari bawah, full width --- */
+    /* ── SIDE PANEL: drawer dari bawah, full width ── */
     .side-panel {
         position: fixed !important;
         top: auto !important;
@@ -809,51 +860,95 @@ input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
         left: 0 !important;
         right: 0 !important;
         width: 100% !important;
-        height: 40vh !important;
-        max-height: 40vh !important;
-        border-radius: 14px 14px 0 0 !important;
-        padding: 14px 16px 20px !important;
+        height: var(--panel-h) !important;
+        max-height: var(--panel-h) !important;
+        border-radius: 12px 12px 0 0 !important;
+        padding: 10px 14px 16px !important;
         overflow-y: auto;
         z-index: 8 !important;
+        /* drag handle visual */
+        border-top: 2px solid var(--border-main) !important;
     }
+    /* Drag handle dekoratif */
+    .side-panel::before {
+        content: '';
+        display: block;
+        width: 36px;
+        height: 4px;
+        background: rgba(0, 240, 255, 0.3);
+        border-radius: 2px;
+        margin: 0 auto 10px;
+    }
+
     .panel-section h3 {
-        font-size: 0.65rem !important;
-        margin-bottom: 10px;
+        font-size: 0.63rem !important;
+        margin-bottom: 8px;
+        letter-spacing: 1px;
     }
     .measure-toolbar {
         grid-template-columns: repeat(3, 1fr);
-        gap: 6px;
+        gap: 5px;
     }
     .measure-btn {
         padding: 8px 4px !important;
+        min-height: 48px; /* touch target layak */
     }
-    .mbtn-icon { font-size: 0.9rem !important; }
-    .mbtn-label { font-size: 0.6rem !important; }
-    .slider-group {
-        margin-bottom: 10px !important;
+    .mbtn-icon { font-size: 0.95rem !important; }
+    .mbtn-label { font-size: 0.58rem !important; }
+
+    .checkbox-label {
+        font-size: 0.72rem;
+        padding: 8px 6px;
+        min-height: 36px; /* touch target */
     }
-    .slider-group label {
-        font-size: 0.65rem !important;
-    }
-    #properties-content {
-        max-height: 120px !important;
-    }
-    .panel-divider {
-        margin: 10px 0 !important;
+    .checkbox-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
     }
 
-    /* --- MINIMAP: pojok kanan bawah, kecil, di atas panel --- */
+    .slider-group { margin-bottom: 8px !important; }
+    .slider-group label { font-size: 0.62rem !important; }
+
+    #properties-content {
+        max-height: 100px !important;
+    }
+    .panel-divider { margin: 8px 0 !important; }
+
+    /* ── MINIMAP: DISEMBUNYIKAN di HP
+       (layar terlalu sempit, dikorbankan untuk kejelasan model) ── */
+    #minimap-wrapper {
+        display: none !important;
+    }
+    /* Jika ingin minimap tetap muncul (hapus rule di atas & aktifkan ini):
     #minimap-wrapper {
         position: fixed !important;
-        bottom: calc(40vh + 30px) !important;
+        top: calc(var(--navbar-h) + 6px) !important;
+        right: 6px !important;
         left: auto !important;
-        right: 10px !important;
-        width: 110px !important;
-        height: 100px !important;
+        bottom: auto !important;
+        width: 100px !important;
+        height: 80px !important;
         z-index: 7 !important;
     }
     .minimap-bar {
-        font-size: 0.55rem !important;
-        padding: 4px 0 !important;
+        font-size: 0.5rem !important;
+        padding: 3px 0 !important;
     }
+    */
+}
+
+/* =========================================
+   RESPONSIVE — SMALL MOBILE (max-width: 400px)
+   Untuk layar sangat sempit seperti iPhone SE
+   ========================================= */
+@media (max-width: 400px) {
+    :root {
+        --panel-h: 40vh; /* sedikit lebih tinggi agar konten tidak terpotong */
+    }
+    .brand-text h1 { font-size: 0.7rem !important; }
+    .brand-text p  { display: none !important; }
+    .nav-tool-btn  { font-size: 0.6rem !important; padding: 5px 8px !important; }
+
+    #viewport-overlays { max-width: 110px; }
+    .legend-item { font-size: 0.55rem; }
 }
