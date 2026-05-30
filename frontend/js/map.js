@@ -56,7 +56,7 @@ const siteIcon = L.divIcon({
     iconAnchor: [8, 8]
 });
 
-L.marker([-6.8906, 107.6083], { icon: siteIcon })
+L.marker([-6.892211, 107.607611], { icon: siteIcon })
     .addTo(window.mapInstance)
     .bindTooltip('Bandung Zoo — Proyek Aktif', {
         permanent: false,
